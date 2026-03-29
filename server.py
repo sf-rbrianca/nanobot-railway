@@ -50,7 +50,7 @@ class BasicAuthBackend(AuthenticationBackend):
 
         auth = conn.headers["Authorization"]
         try:
-            scheme, credentials = auth.split()
+            scheme, credentials = auth.split(None, 1)
             if scheme.lower() != "basic":
                 return None
             decoded = base64.b64decode(credentials).decode("ascii")
