@@ -46,21 +46,29 @@ if not ADMIN_PASSWORD:
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, conn):
         if "Authorization" not in conn.headers:
+            print("[auth] No Authorization header present")
             return None
 
         auth = conn.headers["Authorization"]
         try:
             scheme, credentials = auth.split(None, 1)
+            print(f"[auth] Authorization header received, scheme={scheme!r}")
             if scheme.lower() != "basic":
                 return None
             decoded = base64.b64decode(credentials).decode("ascii")
-        except (ValueError, UnicodeDecodeError):
+        except (ValueError, UnicodeDecodeError) as e:
+            print(f"[auth] Base64 decode failed: {type(e).__name__}: {e}")
             raise AuthenticationError("Invalid credentials")
 
         username, _, password = decoded.partition(":")
+        print(f"[auth] Decoded username={username!r}")
+        print(f"[auth] ADMIN_USERNAME={ADMIN_USERNAME!r}")
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             return AuthCredentials(["authenticated"]), SimpleUser(username)
 
+        username_match = username == ADMIN_USERNAME
+        password_match = password == ADMIN_PASSWORD
+        print(f"[auth] Credential mismatch: username_match={username_match}, password_match={password_match}")
         raise AuthenticationError("Invalid credentials")
 
 
